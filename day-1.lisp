@@ -7,7 +7,11 @@
                 #:firstn
                 #:lines)
   (:import-from #:alexandria
-                #:curry))
+                #:curry)
+  (:export
+   :load-input
+   :part-1
+   :part-2))
 
 (in-package :advent-of-code-2022/day-1)
 
