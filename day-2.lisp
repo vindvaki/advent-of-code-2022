@@ -38,11 +38,10 @@ C Z")
 
 (defun simple-score (round)
   (destructuring-bind (elf me) round
-    (if (= elf me)
-        (+ 3 (1+ me))
-        (if (= (winner elf) me)
-            (+ 6 (1+ me))
-            (1+ me)))))
+    (cond
+      ((= elf me) (+ 3 (1+ me)))
+      ((= (winner elf) me) (+ 6 (1+ me)))
+      (t (1+ me)))))
 
 (defun part-1 (input)
   (~> (parse-input input)
