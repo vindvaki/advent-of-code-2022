@@ -30,9 +30,6 @@ C Z")
   (~> (lines input)
       (mapcar #'parse-line _)))
 
-(defun round<= (self other)
-  (= (winner self) other))
-
 (defun winner (self)
   (mod (1+ self) 3))
 
@@ -43,7 +40,7 @@ C Z")
   (destructuring-bind (elf me) round
     (if (= elf me)
         (+ 3 (1+ me))
-        (if (round<= elf me)
+        (if (= (winner elf) me)
             (+ 6 (1+ me))
             (1+ me)))))
 
