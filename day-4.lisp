@@ -28,8 +28,8 @@
   (let* ((length (length list))
          (first-half (ceiling length 2)))
     (list
-      (take first-half list)
-      (drop first-half list))))
+     (take first-half list)
+     (drop first-half list))))
 
 (defun parse-interval-pair (string)
   (~> (ppcre:split "[-,]" string)
@@ -67,8 +67,8 @@
        (<= a d)))))
 
 (defun interval-pair-overlap-p (interval-pair)
- (destructuring-bind (first second) interval-pair
-   (overlap-p first second)))
+  (destructuring-bind (first second) interval-pair
+    (overlap-p first second)))
 
 (defun part-2 (input)
   (~> (parse-input input)
