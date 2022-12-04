@@ -7,6 +7,7 @@
                 #:~>)
   (:import-from #:uiop
                 #:read-file-string)
+  (:import-from #:ppcre)
   (:export
    :*example*
    :load-input
