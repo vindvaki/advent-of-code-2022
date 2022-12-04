@@ -9,7 +9,12 @@
   (:import-from #:uiop
                 #:read-file-string)
   (:import-from #:alexandria
-                #:with-gensyms))
+                #:with-gensyms)
+  (:export
+   :*example*
+   :load-input
+   :part-1
+   :part-2))
 
 (in-package :advent-of-code-2022/day-3)
 
