@@ -2,7 +2,8 @@
   (:use :cl :fiveam)
   (:local-nicknames (:day-1 :advent-of-code-2022/day-1))
   (:local-nicknames (:day-2 :advent-of-code-2022/day-2))
-  (:local-nicknames (:day-3 :advent-of-code-2022/day-3)))
+  (:local-nicknames (:day-3 :advent-of-code-2022/day-3))
+  (:local-nicknames (:day-4 :advent-of-code-2022/day-4)))
 
 (in-package :advent-of-code-2022-tests/tests)
 
@@ -27,3 +28,11 @@
 (test regression-day-3
   (is (= 7553 (day-3:part-1 (day-3:load-input))))
   (is (= 2758 (day-3:part-2 (day-3:load-input)))))
+
+(test unit-day-4
+  (is (= 2 (day-4:part-1 day-4:*example*)))
+  (is (= 4 (day-4:part-2 day-4:*example*))))
+
+(test regression-day-4
+  (is (= 471 (day-4:part-1 (day-4:load-input))))
+  (is (= 888 (day-4:part-2 (day-4:load-input)))))
