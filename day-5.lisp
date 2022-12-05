@@ -22,21 +22,16 @@
   (read-file-string "day-5.input"))
 
 (defun parse-stacks (string)
-  (loop with lines = (lines string)
+  (loop with lines = (cdr (reverse (lines string)))
         with count = (ceiling (length (car lines)) 4)
         with stacks = (make-array count :initial-element nil :element-type 'list)
-        for line in lines
-        until (digit-char-p (aref line 1)) do
+        for line in lines do
           (loop for i from 0 to (1- count)
                 for j = (1+ (* 4 i))
                 for c = (aref line j)
                 unless (char= #\Space c) do
                   (push c (aref stacks i)))
-        finally
-          (return
-            (loop for i upto (1- count)
-                 do (setf (aref stacks i) (nreverse (aref stacks i)))
-                 finally (return stacks)))))
+        finally (return stacks)))
 
 (defun parse-instruction-line (string)
   (ppcre:register-groups-bind ((#'parse-integer count) (#'parse-integer from) (#'parse-integer to))
