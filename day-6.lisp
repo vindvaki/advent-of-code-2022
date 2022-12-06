@@ -4,7 +4,10 @@
                 #:read-file-string)
   (:import-from #:serapeum
                 #:drop
-                #:take))
+                #:take)
+  (:export :load-input
+           :part-1
+           :part-2))
 
 (in-package :advent-of-code-2022/day-6)
 
@@ -18,12 +21,12 @@
   (find-distinct-run input 14))
 
 (defun find-distinct-run (string length)
-  (do ((i length (1+ i))
-       (head (coerce (take length string) 'list))
-       (rest (drop length string) (drop 1 rest)))
-      ((= length (length (remove-duplicates head))) i)
-    (let ((next-head (cdr head)))
-      (setf (car head) (elt rest 0)
-            (cdr head) nil
-            (cdr (last next-head)) head
-            head next-head))))
+  (do* ((i 0 (1+ i))
+        (table (let ((table (make-hash-table)))
+                 (dotimes (k length table)
+                   (incf (gethash (aref string k) table 0))))))
+      ((= length (hash-table-count table)) (+ i length))
+    (decf (gethash (aref string i) table))
+    (when (= 0 (gethash (aref string i) table))
+      (remhash (aref string i) table))
+    (incf (gethash (aref string (+ i length)) table 0))))
