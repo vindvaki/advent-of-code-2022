@@ -2,9 +2,6 @@
   (:use :cl)
   (:import-from #:uiop
                 #:read-file-string)
-  (:import-from #:serapeum
-                #:drop
-                #:take)
   (:export :load-input
            :part-1
            :part-2))
