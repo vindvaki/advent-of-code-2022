@@ -6,6 +6,8 @@
                 #:lines)
   (:import-from #:trivia
                 #:ematch)
+  (:import-from #:ppcre
+                #:split)
   (:export :load-input
            :part-1
            :part-2))
@@ -65,7 +67,7 @@ $ ls
   (ppcre:register-groups-bind (name args)
       ("\\$ (\\w+) ?(.*)" command-args)
     (make-command :name name
-                  :args (ppcre:split " " args))))
+                  :args (split " " args))))
 
 (defun next-command (lines)
   (when lines
