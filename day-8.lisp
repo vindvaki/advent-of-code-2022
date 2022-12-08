@@ -23,19 +23,15 @@
 (defun load-input ()
   (read-file-string "day-8.input"))
 
-(defun coerce-to-list (object)
-  (coerce object 'list))
-
 (defun digit-from-char (char)
   (- (char-code char) (char-code #\0)))
 
-(defun digit-list-from-char-list (list)
-  (mapcar #'digit-from-char list))
+(defun digit-list-from-char-sequence (sequence)
+  (map 'list #'digit-from-char sequence))
 
 (defun parse-input (input)
   (~> (lines input)
-      (mapcar #'coerce-to-list _)
-      (mapcar #'digit-list-from-char-list _)
+      (mapcar #'digit-list-from-char-sequence _)
       (make-array (list (length _) (length (car _)))
                   :element-type 'fixnum
                   :initial-contents _)))
