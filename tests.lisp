@@ -6,7 +6,8 @@
   (:local-nicknames (:day-4 :advent-of-code-2022/day-4))
   (:local-nicknames (:day-5 :advent-of-code-2022/day-5))
   (:local-nicknames (:day-6 :advent-of-code-2022/day-6))
-  (:local-nicknames (:day-7 :advent-of-code-2022/day-7)))
+  (:local-nicknames (:day-7 :advent-of-code-2022/day-7))
+  (:local-nicknames (:day-8 :advent-of-code-2022/day-8)))
 
 (in-package :advent-of-code-2022-tests/tests)
 
@@ -55,3 +56,11 @@
 (test regression-day-7
   (is (= 1307902 (day-7:part-1 (day-7:load-input))))
   (is (= 7068748 (day-7:part-2 (day-7:load-input)))))
+
+(test unit-day-8
+  (is (= 21 (day-8:part-1 day-8:*example*)))
+  (is (= 8 (day-8:part-2 day-8:*example*))))
+
+(test regression-day-8
+  (is (= 1845 (day-8:part-1 (day-8:load-input))))
+  (is (= 230112 (day-8:part-2 (day-8:load-input)))))
