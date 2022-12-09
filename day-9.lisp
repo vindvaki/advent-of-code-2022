@@ -1,7 +1,7 @@
 (defpackage :advent-of-code-2022/day-9
   (:use :cl)
   (:import-from #:uiop
-      #:read-file-string)
+                #:read-file-string)
   (:import-from #:serapeum
                 #:~>
                 #:lines)
@@ -61,7 +61,7 @@ U 20")
       (mapcar #'parse-line _)))
 
 (defun next-position (position direction)
-    (mapcar #'+ position direction))
+  (mapcar #'+ position direction))
 
 (defun next-direction (head tail)
   (let* ((diff (mapcar #'- head tail))
@@ -80,8 +80,8 @@ U 20")
           (do* ((old-head nil (car iter))
                 (iter knots (cdr iter))
                 (direction initial-direction (next-direction old-head (car iter))))
-              ((not iter) ; until
-               (funcall fn knots)) ; finally
+               ((not iter) ; until
+                (funcall fn knots)) ; finally
             (setf (car iter) (next-position (car iter) direction))))))))
 
 (defmacro do-knot-steps ((knots size steps) &body body)
@@ -91,9 +91,9 @@ U 20")
 
 (defun count-visited (steps size)
   (let ((visited (make-hash-table :test 'equal)))
-      (do-knot-steps (knots size steps)
-        (setf (gethash (copy-list (last knots)) visited) t))
-      (hash-table-count visited)))
+    (do-knot-steps (knots size steps)
+      (setf (gethash (copy-list (last knots)) visited) t))
+    (hash-table-count visited)))
 
 (defun part-1 (input)
   (let ((steps (parse-input input)))
