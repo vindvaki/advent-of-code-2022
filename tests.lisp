@@ -8,7 +8,8 @@
   (:local-nicknames (:day-6 :advent-of-code-2022/day-6))
   (:local-nicknames (:day-7 :advent-of-code-2022/day-7))
   (:local-nicknames (:day-8 :advent-of-code-2022/day-8))
-  (:local-nicknames (:day-9 :advent-of-code-2022/day-9)))
+  (:local-nicknames (:day-9 :advent-of-code-2022/day-9))
+  (:local-nicknames (:day-10 :advent-of-code-2022/day-10)))
 
 (in-package :advent-of-code-2022-tests/tests)
 
@@ -74,3 +75,23 @@
 (test regression-day-9
   (is (= 6367 (day-9:part-1 (day-9:load-input))))
   (is (= 2536 (day-9:part-2 (day-9:load-input)))))
+
+(test unit-day-10
+  (is (= 13140 (day-10:part-1 day-10:*large-example*)))
+  (is (string= "##..##..##..##..##..##..##..##..##..##..
+###...###...###...###...###...###...###.
+####....####....####....####....####....
+#####.....#####.....#####.....#####.....
+######......######......######......####
+#######.......#######.......#######....."
+         (day-10:part-2 day-10:*large-example*))))
+
+(test regression-day-10
+  (is (= 14520 (day-10:part-1 (day-10:load-input))))
+  (is (string= "###..####.###...##..####.####...##.###..
+...#....#.#..#.#..#....#.#.......#.#..##
+...#...#..###..#......#..###.....#.###..
+###...#...#..#.#.##..#...#.......#.#..#.
+.....#....#..#.#..#.#....#....#..#.#..#.
+.....####.###...###.####.####..##..###.."
+         (day-10:part-2 (day-10:load-input)))))
