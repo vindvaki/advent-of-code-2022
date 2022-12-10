@@ -19,7 +19,6 @@
 (defun load-input ()
   (read-file-string "day-10.input"))
 
-
 (defun parse-line (line)
   (let ((instruction (ppcre:split " " line)))
     (ematch (car instruction)
@@ -30,52 +29,44 @@
 (defun parse-input (input)
   (mapcar #'parse-line (lines input)))
 
-(defun observe-signal-strengths (instructions initial-checkpoints)
-  (let* ((checkpoints initial-checkpoints)
-         (checkpoint (pop checkpoints))
-         (result nil))
-    (do-cycles (index register-x instructions)
-      (unless checkpoint
-        (return-from observe-signal-strengths result))
-      (when (= index checkpoint)
-        (push (* checkpoint register-x) result)
-        (setf checkpoint (pop checkpoints))))
-    result))
-
 (defun map-cycles (cycle-callback instructions)
   (loop with register-x = 1
-        with cycle-index = 1
+        with cycle-count = 0
         for instruction in instructions do
-          (progn
-            (ematch (car instruction)
-              ("noop" (progn
-                        (funcall cycle-callback cycle-index register-x)
-                        (incf cycle-index 1)))
-              ("addx" (progn
-                        (funcall cycle-callback cycle-index register-x)
-                        (incf cycle-index 1)
-                        (funcall cycle-callback cycle-index register-x)
-                        (incf register-x (cadr instruction))
-                        (incf cycle-index 1)))))))
+          (ematch (car instruction)
+            ("noop" (progn
+                      (funcall cycle-callback cycle-count register-x)
+                      (incf cycle-count 1)))
+            ("addx" (progn
+                      (funcall cycle-callback cycle-count register-x)
+                      (incf cycle-count 1)
+                      (funcall cycle-callback cycle-count register-x)
+                      (incf register-x (cadr instruction))
+                      (incf cycle-count 1))))))
 
 (defmacro do-cycles ((index register-x instructions) &body body)
   `(map-cycles (lambda (,index ,register-x) ,@body)
                ,instructions))
 
-(defun part-1 (input)
-  (~> (parse-input input)
-      (observe-signal-strengths _ (list 20 60 100 140 180 220))
-      (reduce #'+ _)))
-
-(defun part-2 (input)
-  (let ((screen (make-array '(6 40) :element-type 'character :initial-element #\.)))
+(defun part-1 (input &aux (checkpoints (list 20 60 100 140 180 220)))
+  (let* ((checkpoint (pop checkpoints))
+         (result 0))
     (do-cycles (index register-x (parse-input input))
-      (multiple-value-bind (round col) (floor (1- index) 40)
+      (unless checkpoint
+        (return-from part-1 result))
+      (when (= (1+ index) checkpoint)
+        (incf result (* checkpoint register-x))
+        (setf checkpoint (pop checkpoints))))
+    result))
+
+(defun part-2 (input &key (blank #\.) (visible #\#))
+  (let ((screen (make-array '(6 40) :element-type 'character :initial-element blank)))
+    (do-cycles (index register-x (parse-input input))
+      (multiple-value-bind (round col) (floor index 40)
         (let ((row (mod round 6))
               (sprite-middle (mod register-x 40)))
-          (loop for sprite-col from (1- sprite-middle) to (1+ sprite-middle) do
-            (when (= sprite-col col)
-              (setf (aref screen row col) #\#))))))
+          (when (<= (abs (- sprite-middle col)) 1)
+            (setf (aref screen row col) visible)))))
     (with-output-to-string (stream)
       (print-screen screen stream))))
 
