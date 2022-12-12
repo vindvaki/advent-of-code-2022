@@ -10,7 +10,8 @@
   (:local-nicknames (:day-8 :advent-of-code-2022/day-8))
   (:local-nicknames (:day-9 :advent-of-code-2022/day-9))
   (:local-nicknames (:day-10 :advent-of-code-2022/day-10))
-  (:local-nicknames (:day-11 :advent-of-code-2022/day-11)))
+  (:local-nicknames (:day-11 :advent-of-code-2022/day-11))
+  (:local-nicknames (:day-12 :advent-of-code-2022/day-12)))
 
 (in-package :advent-of-code-2022-tests/tests)
 
@@ -104,3 +105,11 @@
 (test regression-day-11
   (is (= 101436 (day-11:part-1 (day-11:load-input))))
   (is (= 19754471646 (day-11:part-2 (day-11:load-input)))))
+
+(test unit-day-12
+  (is (= 31 (day-12:part-1 day-12:*example*)))
+  (is (= 29 (day-12:part-2 day-12:*example*))))
+
+(test regression-day-12
+  (is (= 490 (day-12:part-1 (day-12:load-input))))
+  (is (= 488 (day-12:part-2 (day-12:load-input)))))
