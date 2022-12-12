@@ -12,13 +12,12 @@
                 #:ematch)
   (:import-from #:alexandria
                 #:compose
-                #:curry
-                #:flatten
                 #:hash-table-values)
   (:export
+   :*example*
    :load-input
-   :part-1))
-  ;;  :part-2))
+   :part-1
+   :part-2))
 
 (in-package :advent-of-code-2022/day-11)
 
@@ -108,9 +107,8 @@
   (loop with table = (make-hash-table)
         for monkey = (read-monkey stream)
         for empty-line = (read-empty-line stream) do
-        (progn
           (setf (gethash (monkey-index monkey) table)
-                monkey))
+                monkey)
         while empty-line
         finally (return table)))
 
