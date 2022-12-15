@@ -5,6 +5,7 @@
   (:import-from #:serapeum
                 #:lines
                 #:~>)
+  (:import-from #:ppcre)
   (:import-from #:alexandria
                 #:compose
                 #:curry))
