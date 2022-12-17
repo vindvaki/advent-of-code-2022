@@ -15,8 +15,8 @@
   (ppcre:register-groups-bind (node
                                (#'parse-integer flow)
                                (#'words neighbours))
-    ("Valve (\\w+) has flow rate=(\\d+); tunnels? leads? to valves? (.*)"
-     string)
+      ("Valve (\\w+) has flow rate=(\\d+); tunnels? leads? to valves? (.*)"
+       string)
     (list node flow neighbours)))
 
 (defun parse-input (input)
@@ -45,7 +45,6 @@
                    (return-from helper 0))
                  (when (= minutes 1)
                    (return-from helper flow))
-                 ()
                  (let ((key (list node minutes overlay)))
                    (multiple-value-bind (cached present) (gethash key cache)
                      (when present
@@ -55,16 +54,69 @@
                                  maximizing (if (= flow 0)
                                                 (helper neighbor (- minutes 1) overlay)
                                                 (max
-                                                   (helper neighbor (- minutes 1) overlay)
-                                                   (+ (* flow (1- minutes))
-                                                      (helper neighbor
-                                                              (- minutes 2)
-                                                              (logior overlay (ash 1 node))))))))))))
+                                                 (helper neighbor (- minutes 1) overlay)
+                                                 (+ (* flow (1- minutes))
+                                                    (helper neighbor
+                                                            (- minutes 2)
+                                                            (logior overlay (ash 1 node))))))))))))
 
         (helper (gethash "AA" id-table) 30 0)))))
 
-
-
+(defun part-2 (input)
+  (destructuring-bind (neighbors flows id-table) (parse-input input)
+    (let ((cache (make-hash-table :test 'equal)))
+      (labels ((helper (u v minutes overlay &aux
+                                              (u-flow (if (logbitp u overlay) 0 (aref flows u)))
+                                              (v-flow (if (logbitp v overlay) 0 (aref flows v))))
+                 (declare (fixnum u v minutes overlay u-flow v-flow))
+                 (when (<= minutes 0)
+                   (return-from helper 0))
+                 (when (= minutes 1)
+                   (return-from helper (+ u-flow v-flow)))
+                 (when (= (length flows) (logcount overlay))
+                   (return-from helper 0))
+                 (when (> v u)
+                   (return-from helper (helper v u minutes overlay)))
+                 (let ((key (list u v minutes overlay)))
+                   (multiple-value-bind (cached present) (gethash key cache)
+                     (when present
+                       (return-from helper cached))
+                     (setf (gethash key cache)
+                           (max
+                            ;; neither opens
+                            (loop for un in (aref neighbors u)
+                                  maximizing
+                                  (loop for vn in (aref neighbors v)
+                                        maximizing (helper un vn (- minutes 1) overlay)))
+                            ;; only u opens
+                            (if (= 0 u-flow)
+                                0
+                                (loop for vn in (aref neighbors v)
+                                      maximizing
+                                      (+ (* u-flow (1- minutes))
+                                         (helper u vn
+                                                 (- minutes 1)
+                                                 (logior overlay (ash 1 u))))))
+                            ;; only v opens
+                            (if (= 0 v-flow)
+                                0
+                                (loop for un in (aref neighbors u)
+                                      maximizing
+                                      (+ (* v-flow (1- minutes))
+                                         (helper un v
+                                                 (- minutes 1)
+                                                 (logior overlay (ash 1 v))))))
+                            ;; both open
+                            (if (or (= 0 u-flow) (= 0 v-flow) (= u v))
+                                0
+                                (+ (* u-flow (1- minutes))
+                                   (* v-flow (1- minutes))
+                                   (helper u v
+                                           (1- minutes)
+                                           (logior overlay (ash 1 u) (ash 1 v)))))))))))
+        (helper (gethash "AA" id-table)
+                (gethash "AA" id-table)
+                26 0)))))
 
 (defun load-input ()
   (read-file-string "day-16.input"))
