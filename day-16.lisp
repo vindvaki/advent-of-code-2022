@@ -1,9 +1,11 @@
 (defpackage :advent-of-code-2022/day-16
   (:use :cl)
   (:import-from #:serapeum
+                #:->
                 #:lines
                 #:words)
   (:import-from #:alexandria
+                #:with-gensyms
                 #:curry
                 #:ensure-gethash)
   (:import-from #:uiop
@@ -36,87 +38,101 @@
           flows
           id-table)))
 
-(defun part-1 (input)
-  (destructuring-bind (neighbors flows id-table) (parse-input input)
-    (let ((cache (make-hash-table :test 'equal)))
-      (labels ((helper (node minutes overlay &aux (flow (if (logbitp node overlay) 0 (aref flows node))))
-                 (declare (fixnum node minutes flow overlay))
-                 (when (<= minutes 0)
-                   (return-from helper 0))
-                 (when (= minutes 1)
-                   (return-from helper flow))
-                 (let ((key (list node minutes overlay)))
-                   (multiple-value-bind (cached present) (gethash key cache)
-                     (when present
-                       (return-from helper cached))
-                     (setf (gethash key cache)
-                           (loop for neighbor in (aref neighbors node)
-                                 maximizing (if (= flow 0)
-                                                (helper neighbor (- minutes 1) overlay)
-                                                (max
-                                                 (helper neighbor (- minutes 1) overlay)
-                                                 (+ (* flow (1- minutes))
-                                                    (helper neighbor
-                                                            (- minutes 2)
-                                                            (logior overlay (ash 1 node))))))))))))
+(defmacro maximizing (&body body)
+  (with-gensyms (called best best-rest value rest)
+    `(let ((,called)
+           (,best 0)
+           (,best-rest))
+       (labels ((maximize (,value &rest ,rest)
+                  (when (or (not ,called)
+                            (< ,best ,value))
+                    (setf ,called t
+                          ,best ,value
+                          ,best-rest ,rest))))
+         ,@body
+         (values-list (cons ,best ,best-rest))))))
 
-        (helper (gethash "AA" id-table) 30 0)))))
+(defun part-1 (input)
+  (destructuring-bind (*neighbors* *flows* id-table) (parse-input input)
+    (let ((*dist* (floyd-warshall *neighbors*))
+          (*cache* (make-hash-table :test 'equal))
+          (*round* 0)
+          (id (gethash "AA" id-table)))
+      (helper id 30 0 0))))
+
+(defparameter *cache* nil)
+(defparameter *neighbors* nil)
+(defparameter *flows* nil)
+(defparameter *dist* nil)
+(defparameter *initial-minutes* nil)
+(defparameter *initial-node* nil)
+(defparameter *round* nil)
+
+(declaim ((or null fixnum) *round*)
+         ((or null simple-array) *flows* *dist*))
+
+(-> helper (fixnum fixnum fixnum fixnum) fixnum)
+(defun helper (node minutes overlay round)
+  (declare (fixnum node minutes overlay round))
+  (when (<= minutes 0)
+    (when (= round 0)
+      (return-from helper 0))
+    (setf minutes *initial-minutes*
+          node *initial-node*)
+    (decf round))
+  (let ((key (list node minutes overlay round)))
+    (multiple-value-bind (cached present) (gethash key *cache*)
+      (when present
+        (return-from helper cached))
+      (let ((flow (if (logbitp node overlay) 0 (aref *flows* node))))
+        (declare (fixnum flow))
+        (setf (gethash key *cache*)
+              (maximizing
+                (dotimes (next (length *flows*))
+                  (when (and (/= next node) (not (logbitp next overlay)))
+                    (let ((dist (aref *dist* node next)))
+                      (declare (fixnum dist))
+                      (when (and dist (>= minutes dist))
+                        (maximize (helper next (- minutes dist) overlay round))
+                        (when (and (>= minutes (1+ dist))
+                                   (/= flow 0))
+                          (maximize (+ (helper next
+                                               (- minutes dist 1)
+                                               (logior overlay (ash 1 node))
+                                               round)
+                                       (* flow (1- minutes)))))))))))))))
+
+(defun floyd-warshall (edges)
+  "Constructs a distance matrix for the edge array under the assumption that every
+edge has weight 1. If two vertices are not connected, their distance is set to `nil'"
+  (declare (simple-array edges))
+  (let* ((n (length edges))
+         (infinity (1+ n))
+         (dist (make-array (list n n) :initial-element infinity)))
+    (dotimes (i n)
+      (dolist (j (aref edges i))
+        (setf (aref dist i j) 1))
+      (setf (aref dist i i) 0))
+    (dotimes (k n)
+      (dotimes (i n)
+        (dotimes (j n)
+          (let ((d (+ (aref dist i k)
+                      (aref dist k j))))
+            (when (> (aref dist i j) d)
+              (setf (aref dist i j) d))))))
+    (dotimes (i n)
+      (dotimes (j n)
+        (when (>= (aref dist i j) infinity)
+          (setf (aref dist i j) nil))))
+    dist))
 
 (defun part-2 (input)
-  (destructuring-bind (neighbors flows id-table) (parse-input input)
-    (let ((cache (make-hash-table :test 'equal)))
-      (labels ((helper (u v minutes overlay &aux
-                                              (u-flow (if (logbitp u overlay) 0 (aref flows u)))
-                                              (v-flow (if (logbitp v overlay) 0 (aref flows v))))
-                 (declare (fixnum u v minutes overlay u-flow v-flow))
-                 (when (<= minutes 0)
-                   (return-from helper 0))
-                 (when (= minutes 1)
-                   (return-from helper (+ u-flow v-flow)))
-                 (when (= (length flows) (logcount overlay))
-                   (return-from helper 0))
-                 (when (> v u)
-                   (return-from helper (helper v u minutes overlay)))
-                 (let ((key (list u v minutes overlay)))
-                   (multiple-value-bind (cached present) (gethash key cache)
-                     (when present
-                       (return-from helper cached))
-                     (setf (gethash key cache)
-                           (max
-                            ;; neither opens
-                            (loop for un in (aref neighbors u)
-                                  maximizing
-                                  (loop for vn in (aref neighbors v)
-                                        maximizing (helper un vn (- minutes 1) overlay)))
-                            ;; only u opens
-                            (if (= 0 u-flow)
-                                0
-                                (loop for vn in (aref neighbors v)
-                                      maximizing
-                                      (+ (* u-flow (1- minutes))
-                                         (helper u vn
-                                                 (- minutes 1)
-                                                 (logior overlay (ash 1 u))))))
-                            ;; only v opens
-                            (if (= 0 v-flow)
-                                0
-                                (loop for un in (aref neighbors u)
-                                      maximizing
-                                      (+ (* v-flow (1- minutes))
-                                         (helper un v
-                                                 (- minutes 1)
-                                                 (logior overlay (ash 1 v))))))
-                            ;; both open
-                            (if (or (= 0 u-flow) (= 0 v-flow) (= u v))
-                                0
-                                (+ (* u-flow (1- minutes))
-                                   (* v-flow (1- minutes))
-                                   (helper u v
-                                           (1- minutes)
-                                           (logior overlay (ash 1 u) (ash 1 v)))))))))))
-        (helper (gethash "AA" id-table)
-                (gethash "AA" id-table)
-                26 0)))))
+  (destructuring-bind (*neighbors* *flows* id-table) (parse-input input)
+    (let ((*dist* (floyd-warshall *neighbors*))
+          (*cache* (make-hash-table :test 'equal))
+          (*initial-node* (gethash "AA" id-table))
+          (*initial-minutes* 26))
+      (helper *initial-node* *initial-minutes* 0 1))))
 
 (defun load-input ()
   (read-file-string "day-16.input"))
