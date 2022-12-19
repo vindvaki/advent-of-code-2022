@@ -57,7 +57,7 @@
           (*cache* (make-hash-table :test 'equal))
           (*round* 0)
           (id (gethash "AA" id-table)))
-      (helper id 30 0 0))))
+      (helper id 30 (init-overlay) 0))))
 
 (defparameter *cache* nil)
 (defparameter *neighbors* nil)
@@ -91,8 +91,7 @@
               (maximizing
                 (dotimes (next (length *flows*))
                   (when (and (/= next node)
-                             (not (logbitp next overlay))
-                             (/= 0 (aref *flows* next)))
+                             (not (logbitp next overlay)))
                     (let ((dist (aref *dist* node next)))
                       (declare (fixnum dist))
                       (when (and dist (>= minutes dist))
@@ -128,13 +127,21 @@ edge has weight 1. If two vertices are not connected, their distance is set to `
           (setf (aref dist i j) nil))))
     dist))
 
+(defun init-overlay ()
+  (loop with overlay = 0
+        for i = 0 then (1+ i)
+        for flow across *flows*
+        when (= flow 0) do
+          (setf overlay (logior overlay (ash 1 i)))
+        finally (return overlay)))
+
 (defun part-2 (input)
   (destructuring-bind (*neighbors* *flows* id-table) (parse-input input)
     (let ((*dist* (floyd-warshall *neighbors*))
           (*cache* (make-hash-table :test 'equal))
           (*initial-node* (gethash "AA" id-table))
           (*initial-minutes* 26))
-      (helper *initial-node* *initial-minutes* 0 1))))
+      (helper *initial-node* *initial-minutes* (init-overlay) 1))))
 
 (defun load-input ()
   (read-file-string "day-16.input"))
