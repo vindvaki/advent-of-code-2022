@@ -73,19 +73,22 @@
 
 (-> helper (fixnum fixnum fixnum fixnum) fixnum)
 (defun helper (node minutes overlay round)
-  (declare (fixnum node minutes overlay round))
-  (when (<= minutes 0)
-    (when (= round 0)
-      (return-from helper 0))
-    (setf minutes *initial-minutes*
-          node *initial-node*)
-    (decf round))
-  (let ((key (list node minutes overlay round)))
-    (multiple-value-bind (cached present) (gethash key *cache*)
-      (when present
-        (return-from helper cached))
-      (let ((flow (if (logbitp node overlay) 0 (aref *flows* node))))
-        (declare (fixnum flow))
+  (declare (fixnum node minutes overlay round)
+           ((simple-vector) *flows*)
+           ((simple-array t (* *)) *dist*))
+  (let* ((next-overlay (logior overlay (ash 1 node)))
+         (flow (if (= next-overlay overlay) 0 (aref *flows* node))))
+    (declare (fixnum flow))
+    (when (<= minutes 1)
+      (when (= round 0)
+        (return-from helper (if (= minutes 1) flow 0)))
+      (setf minutes *initial-minutes*
+            node *initial-node*)
+      (decf round))
+    (let ((key (list node minutes overlay round)))
+      (multiple-value-bind (cached present) (gethash key *cache*)
+        (when present
+          (return-from helper cached))
         (setf (gethash key *cache*)
               (maximizing
                 (dotimes (next (length *flows*))
@@ -98,14 +101,14 @@
                                    (/= flow 0))
                           (maximize (+ (helper next
                                                (- minutes dist 1)
-                                               (logior overlay (ash 1 node))
+                                               next-overlay
                                                round)
                                        (* flow (1- minutes)))))))))))))))
 
 (defun floyd-warshall (edges)
   "Constructs a distance matrix for the edge array under the assumption that every
 edge has weight 1. If two vertices are not connected, their distance is set to `nil'"
-  (declare (simple-array edges))
+  (declare (simple-vector edges))
   (let* ((n (length edges))
          (infinity (1+ n))
          (dist (make-array (list n n) :initial-element infinity)))
