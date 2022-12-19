@@ -6,7 +6,6 @@
                 #:words)
   (:import-from #:alexandria
                 #:with-gensyms
-                #:curry
                 #:ensure-gethash)
   (:import-from #:uiop
                 #:read-file-string))
