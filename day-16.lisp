@@ -79,7 +79,6 @@
     (when (= round 0)
       (return-from helper 0))
     (return-from helper (helper *initial-node* *initial-minutes* overlay (1- round))))
-
   (let ((key (list node minutes overlay round)))
     (multiple-value-bind (cached present) (gethash key *cache*)
       (when present
