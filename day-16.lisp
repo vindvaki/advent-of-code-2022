@@ -75,34 +75,36 @@
   (declare (fixnum node minutes overlay round)
            ((simple-vector) *flows*)
            ((simple-array t (* *)) *dist*))
+  (when (<= minutes 0)
+    (when (= round 0)
+      (return-from helper 0))
+    (return-from helper (helper *initial-node* *initial-minutes* overlay (1- round))))
   (let* ((next-overlay (logior overlay (ash 1 node)))
-         (flow (if (= next-overlay overlay) 0 (aref *flows* node))))
+         (flow (if (= next-overlay overlay) 0 (aref *flows* node)))
+         (key (list node minutes overlay round)))
     (declare (fixnum flow))
-    (when (<= minutes 1)
-      (when (= round 0)
-        (return-from helper (if (= minutes 1) flow 0)))
-      (setf minutes *initial-minutes*
-            node *initial-node*)
-      (decf round))
-    (let ((key (list node minutes overlay round)))
-      (multiple-value-bind (cached present) (gethash key *cache*)
-        (when present
-          (return-from helper cached))
-        (setf (gethash key *cache*)
-              (maximizing
-                (dotimes (next (length *flows*))
-                  (when (and (/= next node) (not (logbitp next overlay)))
-                    (let ((dist (aref *dist* node next)))
-                      (declare (fixnum dist))
-                      (when (and dist (>= minutes dist))
-                        (maximize (helper next (- minutes dist) overlay round))
-                        (when (and (>= minutes (1+ dist))
-                                   (/= flow 0))
-                          (maximize (+ (helper next
-                                               (- minutes dist 1)
-                                               next-overlay
-                                               round)
-                                       (* flow (1- minutes)))))))))))))))
+    (multiple-value-bind (cached present) (gethash key *cache*)
+      (when present
+        (return-from helper cached))
+      (setf (gethash key *cache*)
+            (maximizing
+              (dotimes (next (length *flows*))
+                (when (and (/= next node)
+                           (not (logbitp next overlay))
+                           (/= 0 (aref *flows* next)))
+                  (let ((dist (aref *dist* node next)))
+                    (declare (fixnum dist))
+                    (when (and dist (>= minutes dist))
+                      (maximize (helper next (- minutes dist) overlay round))
+                      (when (and (>= minutes (1+ dist))
+                                 (/= flow 0))
+                        (maximize (+ (helper next
+                                             (- minutes dist 1)
+                                             next-overlay
+                                             round)
+                                     (* flow (1- minutes)))))))))
+              (when (and (> minutes 0))
+                (maximize (* flow (1- minutes)))))))))
 
 (defun floyd-warshall (edges)
   "Constructs a distance matrix for the edge array under the assumption that every
