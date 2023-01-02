@@ -1,18 +1,12 @@
 (defpackage :advent-of-code-2022/day-19
   (:use :cl)
   (:import-from #:alexandria
-                #:copy-array
-                #:compose
-                #:hash-table-alist
-                #:copy-hash-table
-                #:hash-table-keys
-                #:curry)
+                #:copy-array)
   (:import-from #:serapeum
                 #:take
                 #:lines
                 #:dict
                 #:~>)
-  (:import-from #:fset)
   (:import-from #:trivia
                 #:ematch)
   (:import-from #:uiop
@@ -97,11 +91,15 @@
           (when (< time max-time)
             (collect (cons next-state time))))))))
 
-(defmethod fset:compare ((s1 state) (s2 state))
-  (fset:compare-slots s1 s2 #'state-resources #'state-robots))
-
 (defun state= (s1 s2)
-  (fset:equal? s1 s2))
+  (and (number-array= (state-robots s1) (state-robots s2))
+       (number-array= (state-resources s1) (state-resources s2))))
+
+(defun number-array= (xs ys)
+  (and (= (length xs) (length ys))
+       (loop for x across xs
+             for y across ys
+             always (= x y))))
 
 (defun state-sxhash (state)
   (sxhash (cons (coerce (state-robots state) 'list)
