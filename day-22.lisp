@@ -2,10 +2,10 @@
   (:use :cl)
   (:import-from #:uiop
                 #:read-file-string)
+  (:import-from #:ppcre)
   (:import-from #:serapeum
                 #:lines)
   (:import-from #:alexandria
-                #:curry
                 #:if-let)
   (:import-from #:trivia
                 #:ematch))
@@ -131,6 +131,44 @@
                     (setf (bref board row col) c)))
     board))
 
+(defun cube-neighbors (facet)
+  (ecase facet
+    (:-z '(:+y :-x :-y :+x))
+    (:+x '(:+z :+y :-z :-y))
+    (:-y '(:+z :+x :-z :-x))
+    (:-x '(:+z :-y :-z :+y))
+    (:+y '(:+z :-x :-z :+x))
+    (:+z '(:-y :-x :+y :+x))))
+
+(defun rotate-clockwise (list n)
+  "Rotate 90 degrees clockwise around the origin"
+  (when (= n 0)
+    (return-from rotate-clockwise list))
+  (let ((rotated-once (destructuring-bind (row col) list
+                        (list (- col) row))))
+    (rotate-clockwise rotated-once (1- n))))
+
+(defun unfold-cube (board cube-edge-length)
+  (do* ((corner-0 (starting-position board))
+        (center-0 (list+ corner-0 (list (/ cube-edge-length 2)
+                                        (/ cube-edge-length 2))))
+        (direction-0 (list (- cube-edge-length) 0))
+        (visited (make-hash-table :test 'equal))
+        (stack (list (list :-z :-y center-0 direction-0))))
+       ((not stack) visited)
+    (destructuring-bind (facet previous-facet position direction) (pop stack)
+      (setf (gethash position visited) facet)
+      (let* ((neighbors (cube-neighbors facet))
+             (offset (+ 2 (position previous-facet neighbors))))
+        (dotimes (i 4)
+          (let ((next-facet (nth (mod (+ i offset) 4) neighbors))
+                (next-position (list+ position direction)))
+            (print next-position)
+            (unless (or (apply #'out-of-bounds-p board next-position)
+                        (gethash next-position visited))
+              (push (list next-facet facet next-position direction) stack))
+            (setf direction (rotate-clockwise direction 1))))))))
+
 (defun parse-moves (string)
   (loop with start = 0
         until (= start (1- (length string)))
@@ -164,3 +202,5 @@
         ......#.
 
 10R5L5R10L4R5L5")
+
+(defparameter *board* (car (parse-input *example*)))
