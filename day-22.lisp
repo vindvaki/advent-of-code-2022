@@ -100,7 +100,6 @@
   (let ((next-state (copy-state state)))
     (etypecase move
       (number (dotimes (i move)
-                (print (state-position next-state))
                 (setf (apply #'bref (state-board next-state) (state-position next-state))
                       (direction-char (state-direction next-state)))
                 (setf next-state (advance-state next-state))))
@@ -116,6 +115,8 @@
                              ((list 1 0) (list 0 -1))
                              ((list 0 -1) (list -1 0))
                              ((list -1 0) (list 0 1))))))))
+    (setf (apply #'bref (state-board next-state) (state-position next-state))
+          (direction-char (state-direction next-state)))
     next-state))
 
 (defmethod print-object ((obj board) stream)
@@ -260,11 +261,7 @@
                                           (3 (list (1- edge-length) 0))))))
 
             (setf next-position (list+ rotated-corner
-                                       rotated-corner->next-position))
-            (print (list "neighbor-corner" neighbor-corner
-                         "rotated-corner" rotated-corner
-                         "rotated-corner->next-position" rotated-corner->next-position
-                         "next-position" next-position))))))
+                                       rotated-corner->next-position))))))
     (assert (not (apply #'out-of-bounds-p board next-position)))
     (if (char/= #\# (apply #'bref board next-position))
         (make-cubic-state
@@ -345,6 +342,7 @@
         .#......
         ......#.
 
-10R5L5R10L4R5L5")
+10R5L5R10L4R5L5
+")
 
 (defparameter *board* (car (parse-input *example*)))
