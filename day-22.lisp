@@ -259,7 +259,6 @@
                                           (1 (list 0 (1- edge-length)))
                                           (2 (list (1- edge-length) (1- edge-length)))
                                           (3 (list (1- edge-length) 0))))))
-
             (setf next-position (list+ rotated-corner
                                        rotated-corner->next-position))))))
     (assert (not (apply #'out-of-bounds-p board next-position)))
