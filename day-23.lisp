@@ -1,4 +1,4 @@
-(defpackage :advent-of-code-2023/day-23
+(defpackage :advent-of-code-2022/day-23
   (:use :cl)
   (:import-from #:uiop
                 #:read-file-string)
@@ -18,7 +18,7 @@
   (:import-from #:trivia
                 #:ematch))
 
-(in-package :advent-of-code-2023/day-23)
+(in-package :advent-of-code-2022/day-23)
 
 (defparameter *example* "....#..
 ..###.#
